@@ -1,0 +1,151 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background-color: #FFE0E9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    text-align: center;
+    background-color: #FFF5F7;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(255, 107, 107, 0.1);
+    border: 3px solid #FFB6C1;
+}
+
+.header {
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #FF6B6B;
+    margin-bottom: 15px;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 0px #FFB6C1;
+}
+
+.score-container {
+    display: inline-block;
+    padding: 10px 25px;
+    background-color: #7BED9F;
+    color: white;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    box-shadow: 0 4px 0 #2ECC71;
+}
+
+#game-container {
+    margin: 20px auto;
+    padding: 10px;
+    background-color: white;
+    border-radius: 15px;
+    border: 3px solid #FFB6C1;
+    overflow: hidden;
+}
+
+#game-board {
+    background-color: white;
+}
+
+.game-controls {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#start-btn {
+    background-color: #7BED9F;
+    color: white;
+    box-shadow: 0 4px 0 #2ECC71;
+}
+
+#pause-btn {
+    background-color: #FFB6C1;
+    color: white;
+    box-shadow: 0 4px 0 #FF69B4;
+}
+
+button:hover {
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+.speed-control {
+    background-color: #FFF5F7;
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: 2px solid #FFB6C1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.speed-control label {
+    color: #FF6B6B;
+    font-size: 1.1em;
+}
+
+select {
+    padding: 8px 15px;
+    border-radius: 8px;
+    border: 2px solid #FFB6C1;
+    background-color: white;
+    font-size: 1em;
+    cursor: pointer;
+    outline: none;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    color: #FF6B6B;
+}
+
+select:focus {
+    border-color: #7BED9F;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+    
+    button {
+        padding: 10px 20px;
+        font-size: 1em;
+    }
+    
+    .speed-control {
+        padding: 8px 15px;
+    }
+}
