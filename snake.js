@@ -9,16 +9,22 @@ class Snake {
         this.score = 0;
         this.gameLoop = null;
         this.isPaused = false;
-        this.speed = 150; // Default speed (medium)
+        this.speed = 150;
+        this.highScore = localStorage.getItem('snakeHighScore') || 0;
+        this.gameMode = 'classic'; // 默认经典模式
+        this.timeLeft = 60; // 限时模式的时间限制（秒）
+        this.timeInterval = null;
         
         // 添加可爱的颜色主题
         this.colors = {
-            snake: '#FF6B6B',  // 粉红色的蛇身
-            snakeHead: '#FF4757', // 深粉色的蛇头
-            food: '#7BED9F',   // 青绿色的食物
-            grid: '#F1F2F6',   // 浅灰色网格
-            background: '#FFFFFF' // 白色背景
+            snake: '#FF6B6B',
+            snakeHead: '#FF4757',
+            food: '#7BED9F',
+            grid: '#F1F2F6',
+            background: '#FFFFFF'
         };
+        
+        this.particles = [];
         
         this.initializeCanvas();
         this.setupEventListeners();
@@ -29,6 +35,44 @@ class Snake {
         this.canvas.height = 400;
     }
 
+    // 添加粒子效果
+    createParticles(x, y, color) {
+        for (let i = 0; i < 5; i++) {
+            this.particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 5,
+                vy: (Math.random() - 0.5) * 5,
+                size: Math.random() * 3 + 2,
+                color: color,
+                life: 1
+            });
+        }
+    }
+
+    updateParticles() {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.02;
+            if (p.life <= 0) {
+                this.particles.splice(i, 1);
+            }
+        }
+    }
+
+    drawParticles() {
+        this.particles.forEach(p => {
+            this.ctx.globalAlpha = p.life;
+            this.ctx.fillStyle = p.color;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fill();
+        });
+        this.ctx.globalAlpha = 1;
+    }
+
     draw() {
         // 清空画布并填充背景色
         this.ctx.fillStyle = this.colors.background;
@@ -36,6 +80,10 @@ class Snake {
 
         // 绘制网格
         this.drawGrid();
+
+        // 绘制粒子
+        this.updateParticles();
+        this.drawParticles();
 
         // 绘制蛇
         this.snake.forEach((segment, index) => {
@@ -150,115 +198,152 @@ class Snake {
         this.ctx.fill();
     }
 
+    move() {
+        const head = {...this.snake[0]};
+        
+        switch(this.direction) {
+            case 'up': head.y--; break;
+            case 'down': head.y++; break;
+            case 'left': head.x--; break;
+            case 'right': head.x++; break;
+        }
+        
+        // 根据游戏模式处理边界
+        if (this.gameMode === 'infinite') {
+            // 无限模式：从另一边出现
+            if (head.x < 0) head.x = Math.floor(this.canvas.width / this.gridSize) - 1;
+            if (head.x >= this.canvas.width / this.gridSize) head.x = 0;
+            if (head.y < 0) head.y = Math.floor(this.canvas.height / this.gridSize) - 1;
+            if (head.y >= this.canvas.height / this.gridSize) head.y = 0;
+        } else {
+            // 经典模式和限时模式：撞墙结束
+            if (head.x < 0 || head.x >= this.canvas.width / this.gridSize ||
+                head.y < 0 || head.y >= this.canvas.height / this.gridSize) {
+                this.gameOver();
+                return;
+            }
+        }
+        
+        // 检查是否撞到自己
+        if (this.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+            this.gameOver();
+            return;
+        }
+        
+        this.snake.unshift(head);
+        
+        // 检查是否吃到食物
+        if (head.x === this.food.x && head.y === this.food.y) {
+            this.score += 10;
+            document.getElementById('score').textContent = this.score;
+            this.food = this.generateFood();
+            // 在食物位置创建粒子效果
+            this.createParticles(
+                head.x * this.gridSize + this.gridSize/2,
+                head.y * this.gridSize + this.gridSize/2,
+                this.colors.food
+            );
+        } else {
+            this.snake.pop();
+        }
+    }
+
     generateFood() {
         const x = Math.floor(Math.random() * (this.canvas.width / this.gridSize));
         const y = Math.floor(Math.random() * (this.canvas.height / this.gridSize));
         return {x, y};
     }
 
-    move() {
-        const head = {...this.snake[0]};
-
-        switch(this.direction) {
-            case 'up':
-                head.y--;
-                // 如果超出上边界，从下方出现
-                if (head.y < 0) {
-                    head.y = Math.floor(this.canvas.height / this.gridSize) - 1;
-                }
-                break;
-            case 'down':
-                head.y++;
-                // 如果超出下边界，从上方出现
-                if (head.y >= this.canvas.height / this.gridSize) {
-                    head.y = 0;
-                }
-                break;
-            case 'left':
-                head.x--;
-                // 如果超出左边界，从右边出现
-                if (head.x < 0) {
-                    head.x = Math.floor(this.canvas.width / this.gridSize) - 1;
-                }
-                break;
-            case 'right':
-                head.x++;
-                // 如果超出右边界，从左边出现
-                if (head.x >= this.canvas.width / this.gridSize) {
-                    head.x = 0;
-                }
-                break;
-        }
-
-        // 检查是否吃到食物
-        if (head.x === this.food.x && head.y === this.food.y) {
-            this.food = this.generateFood();
-            this.score += 10;
-            document.getElementById('score').textContent = this.score;
-            // 添加吃到食物的视觉效果
-            this.showFoodEffect();
-        } else {
-            this.snake.pop();
-        }
-
-        // 只检查是否撞到自己
-        if (this.checkSelfCollision(head)) {
-            this.gameOver();
-            return;
-        }
-
-        this.snake.unshift(head);
-        this.draw();
-    }
-
-    // 修改碰撞检测，只检查自身碰撞
-    checkSelfCollision(head) {
-        // 跳过头部位置，从索引1开始检查
-        return this.snake.slice(1).some(segment => 
-            segment.x === head.x && segment.y === head.y
-        );
-    }
-
-    // 添加食物效果
-    showFoodEffect() {
-        const effect = document.createElement('div');
-        effect.className = 'food-effect';
-        effect.textContent = '+10';
-        effect.style.left = `${this.food.x * this.gridSize}px`;
-        effect.style.top = `${this.food.y * this.gridSize}px`;
-        document.getElementById('game-container').appendChild(effect);
-        
-        setTimeout(() => effect.remove(), 1000);
-    }
-
     startGame() {
-        if (this.gameLoop) {
-            clearInterval(this.gameLoop);
-        }
+        // 清除之前的游戏循环和计时器
+        if (this.gameLoop) clearInterval(this.gameLoop);
+        if (this.timeInterval) clearInterval(this.timeInterval);
+        
+        // 重置游戏状态
         this.snake = [{x: 5, y: 5}];
         this.direction = 'right';
         this.score = 0;
         document.getElementById('score').textContent = '0';
         this.food = this.generateFood();
         this.isPaused = false;
-        this.gameLoop = setInterval(() => this.move(), this.speed);
+        document.getElementById('pause-btn').textContent = '暂停';
+        
+        // 获取选择的游戏模式
+        this.gameMode = document.querySelector('input[name="mode"]:checked').value;
+        
+        // 如果是限时模式，初始化计时器
+        if (this.gameMode === 'timed') {
+            this.timeLeft = 60;
+            document.getElementById('time').textContent = this.timeLeft;
+            document.getElementById('time').parentElement.classList.remove('time-warning');
+            
+            this.timeInterval = setInterval(() => {
+                if (!this.isPaused) {
+                    this.timeLeft--;
+                    document.getElementById('time').textContent = this.timeLeft;
+                    
+                    // 最后10秒添加警告效果
+                    if (this.timeLeft <= 10) {
+                        document.getElementById('time').parentElement.classList.add('time-warning');
+                    }
+                    
+                    // 时间到，游戏结束
+                    if (this.timeLeft <= 0) {
+                        this.gameOver();
+                    }
+                }
+            }, 1000);
+        }
+        
+        // 启动游戏循环
+        this.gameLoop = setInterval(() => {
+            if (!this.isPaused) {
+                this.move();
+                this.draw();
+            }
+        }, this.speed);
     }
 
     togglePause() {
-        if (this.isPaused) {
-            this.gameLoop = setInterval(() => this.move(), this.speed);
-            document.getElementById('pause-btn').textContent = '暂停';
-        } else {
-            clearInterval(this.gameLoop);
-            document.getElementById('pause-btn').textContent = '继续';
-        }
         this.isPaused = !this.isPaused;
+        document.getElementById('pause-btn').textContent = this.isPaused ? '继续' : '暂停';
     }
 
     gameOver() {
         clearInterval(this.gameLoop);
+        clearInterval(this.timeInterval);
         this.gameLoop = null;
-        alert(`游戏结束！得分：${this.score}`);
+        this.timeInterval = null;
+        
+        // 更新最高分
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem('snakeHighScore', this.highScore);
+        }
+
+        // 显示游戏结束对话框
+        const modal = document.getElementById('game-over-modal');
+        const finalScore = document.getElementById('final-score');
+        const highScore = document.getElementById('high-score');
+        const finalTime = document.getElementById('final-time');
+        
+        finalScore.textContent = this.score;
+        highScore.textContent = this.highScore;
+        
+        // 显示游戏时长
+        if (this.gameMode === 'timed') {
+            finalTime.textContent = `${60 - this.timeLeft}秒`;
+        } else {
+            finalTime.textContent = '无限制';
+        }
+        
+        // 添加彩虹效果
+        if (this.score > this.highScore) {
+            finalScore.classList.add('rainbow-text');
+            setTimeout(() => finalScore.classList.remove('rainbow-text'), 5000);
+        }
+        
+        modal.style.display = 'flex';
     }
 
     setupEventListeners() {
@@ -283,6 +368,10 @@ class Snake {
         // 按钮控制
         document.getElementById('start-btn').addEventListener('click', () => this.startGame());
         document.getElementById('pause-btn').addEventListener('click', () => this.togglePause());
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            document.getElementById('game-over-modal').style.display = 'none';
+            this.startGame();
+        });
         
         // 速度控制
         document.getElementById('speed').addEventListener('change', (e) => {
@@ -300,6 +389,20 @@ class Snake {
             if (this.gameLoop) {
                 this.startGame(); // 重启游戏以应用新速度
             }
+        });
+        
+        // 添加模式切换监听器
+        document.querySelectorAll('input[name="mode"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (this.gameLoop) {
+                    if (confirm('切换模式将重新开始游戏，是否继续？')) {
+                        this.startGame();
+                    } else {
+                        // 恢复之前的选择
+                        document.querySelector(`input[value="${this.gameMode}"]`).checked = true;
+                    }
+                }
+            });
         });
     }
 }

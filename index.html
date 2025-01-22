@@ -10,9 +10,26 @@
     <div class="container">
         <div class="header animate__animated animate__fadeIn">
             <h1>贪吃蛇</h1>
-            <div class="score-container animate__animated animate__slideInRight">
-                <div class="score-label">得分</div>
-                <div id="score">0</div>
+            <div class="game-info">
+                <div class="score-container animate__animated animate__slideInRight">
+                    <div class="score-label">得分</div>
+                    <div id="score">0</div>
+                </div>
+                <div class="time-container animate__animated animate__slideInRight">
+                    <div class="time-label">时间</div>
+                    <div id="time">60</div>
+                </div>
+            </div>
+            <div class="mode-select">
+                <label>
+                    <input type="radio" name="mode" value="classic" checked> 经典模式
+                </label>
+                <label>
+                    <input type="radio" name="mode" value="infinite"> 无限模式
+                </label>
+                <label>
+                    <input type="radio" name="mode" value="timed"> 限时模式
+                </label>
             </div>
         </div>
         <div id="game-container" class="animate__animated animate__zoomIn">
@@ -31,6 +48,27 @@
             </div>
         </div>
     </div>
+
+    <!-- 游戏结束对话框 -->
+    <div id="game-over-modal" class="modal">
+        <div class="modal-content animate__animated animate__bounceIn">
+            <h2>游戏结束</h2>
+            <div class="final-score">
+                <span>最终得分：</span>
+                <span id="final-score">0</span>
+            </div>
+            <div class="high-score">
+                <span>最高分：</span>
+                <span id="high-score">0</span>
+            </div>
+            <div class="game-time">
+                <span>游戏时长：</span>
+                <span id="final-time">0</span>
+            </div>
+            <button id="restart-btn">再玩一次</button>
+        </div>
+    </div>
+
     <script src="snake.js"></script>
 </body>
 </html>
